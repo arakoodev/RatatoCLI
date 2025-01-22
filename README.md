@@ -15,185 +15,250 @@ An AI-powered terminal application with Claude integration, built for Windows an
 - 🔐 Windows Store integration
 - ⚡ Azure Functions backend integration
 
-## Installation
+# Smart Terminal
 
-### From Windows Store
+An AI-powered terminal application with Claude integration and Windows Store licensing.
 
-1. Visit the Microsoft Store
-2. Search for "Smart Terminal"
-3. Choose your subscription tier
-4. Install the application
+## Table of Contents
+- [Prerequisites](#prerequisites)
+- [Project Setup](#project-setup)
+- [Local Development](#local-development)
+- [Azure Backend Setup](#azure-backend-setup)
+- [Building the Windows Package](#building-the-windows-package)
+- [Windows Store Publishing](#windows-store-publishing)
+- [Architecture](#architecture)
 
-### From Release
+## Prerequisites
 
-1. Download the latest release from GitHub Releases
-2. Extract the ZIP file
-3. Run `smart-terminal.exe`
+### Development Tools
+- Rust (latest stable version)
+- Node.js 18+
+- Azure CLI
+- Windows 10/11 SDK
+- Visual Studio 2019 or newer with:
+  - .NET Desktop Development workload
+  - Universal Windows Platform development workload
+- Windows Store Developer Account
 
-### Building from Source
-
-Prerequisites:
-- Rust 1.70 or higher
-- Cargo
-- Windows SDK (for Windows builds)
-- Xcode (for macOS builds)
-
+### Required Software
 ```bash
-# Clone the repository
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install Windows SDK (if not already installed)
+winget install Microsoft.WindowsSDK
+
+# Install Azure Functions Core Tools
+npm install -g azure-functions-core-tools@4
+
+# Install Terraform
+choco install terraform
+
+# Install WiX Toolset
+choco install wixtoolset
+```
+
+## Project Setup
+
+1. Clone the repository:
+```bash
 git clone https://github.com/yourusername/smart-terminal
 cd smart-terminal
-
-# Create .env file with required environment variables:
-cat > .env << EOL
-STORE_PRODUCT_ID=your-windows-store-product-id
-API_BASE_URL=https://smart-terminal-api-prod.azurewebsites.net
-EOL
-
-# Build the project
-cargo build --release
-
-# Run the application
-cargo run --release
 ```
 
-## Configuration
+2. Create environment files:
 
-The application requires two environment variables:
-
+`.env` for the terminal:
 ```env
-# The Windows Store product ID for your application
+API_BASE_URL=https://your-azure-function-url
 STORE_PRODUCT_ID=your-windows-store-product-id
-
-# The Azure Functions backend URL
-API_BASE_URL=https://smart-terminal-api-prod.azurewebsites.net
 ```
 
-These can be set either in a `.env` file in the project root or as system environment variables.
-
-## Usage
-
-### Basic Commands
-
-- `i` - Enter input mode
-- `Esc` - Exit input mode
-- `/help` - Show help message
-- `/clear` - Clear screen
-- `/upgrade` - Open upgrade dialog
-- `q` - Quit application
-
-### Navigation (Normal Mode)
-
-- `j` - Scroll down
-- `k` - Scroll up
-- Arrow keys - Navigate history
-
-### Text Editing (Input Mode)
-
-- `Ctrl+W` - Delete word
-- `Ctrl+U` - Clear line
-- Arrow keys - Move cursor
-- `Up/Down` - Navigate command history
-
-## Subscription Tiers
-
-### Free Tier
-- 50 AI queries per month
-- Basic command assistance
-
-### Basic Tier ($4.99/month)
-- 500 AI queries per month
-- Enhanced command suggestions
-- Priority support
-
-### Pro Tier ($9.99/month)
-- 2,000 AI queries per month
-- Advanced AI features
-- Premium support
-- Custom configurations
-
-### Enterprise Tier ($49.99/month)
-- 10,000 AI queries per month
-- Dedicated support
-- Custom integrations
-- Team management
-
-## Development
-
-### Project Structure
-
-```
-smart-terminal/
-├── src/
-│   └── main.rs         # Main application code
-├── Cargo.toml          # Project dependencies
-├── .env                # Environment configuration
-└── README.md          # This file
+`azure/terraform.tfvars`:
+```hcl
+environment = "prod"
+location = "eastus"
+anthropic_api_key = "your-key-here"
+microsoft_auth_secret = "your-store-secret"
 ```
 
-### Building for Windows Store
+## Local Development
 
-1. Register as a Microsoft Partner Center developer
-2. Set up your app listing and subscription products
-3. Get your product ID from the Partner Center
-4. Build the MSIX package:
+1. Build and run the terminal:
+```bash
+cargo build
+cargo run
+```
+
+2. Run the Azure Function locally:
+```bash
+cd azure
+npm install
+func start
+```
+
+## Azure Backend Setup
+
+1. Initialize Terraform:
+```bash
+cd azure
+terraform init
+```
+
+2. Deploy infrastructure:
+```bash
+terraform plan
+terraform apply
+```
+
+3. Deploy the Function:
+```bash
+func azure functionapp publish smart-terminal-api
+```
+
+## Building the Windows Package
+
+1. Configure version information in `Cargo.toml`:
+```toml
+[package]
+version = "1.0.0"
+```
+
+2. Build release version:
 ```bash
 cargo build --release
-# Package creation steps in infrastructure/windows/package.ps1
 ```
 
-## Infrastructure
+3. Create application manifest (AppxManifest.xml):
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  
+  <Identity
+    Name="YourCompany.SmartTerminal"
+    Publisher="CN=YourPublisherID"
+    Version="1.0.0.0" />
+    
+  <!-- ... rest of the manifest ... -->
+</Package>
+```
 
-The project uses:
-- Azure Functions for backend processing
-- Azure Key Vault for secret management
-- Azure Table Storage for usage tracking
-- Windows Store for licensing and payments
+4. Prepare assets:
+```
+assets/
+  ├── Square150x150Logo.png
+  ├── Square44x44Logo.png
+  ├── StoreLogo.png
+  └── Wide310x150Logo.png
+```
 
-## Contributing
+5. Create app package:
+```bash
+# Create directory structure
+mkdir AppPackages
+mkdir AppPackages/SmartTerminal
+copy target/release/smart-terminal.exe AppPackages/SmartTerminal/
+copy AppxManifest.xml AppPackages/SmartTerminal/
+xcopy /E assets AppPackages/SmartTerminal/assets/
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+# Create MSIX package
+makeappx.exe pack /d AppPackages/SmartTerminal /p SmartTerminal.msix
+```
+
+6. Sign the package:
+```bash
+# Create certificate (if you don't have one)
+New-SelfSignedCertificate -Type Custom -Subject "CN=YourCompany" -KeyUsage DigitalSignature -FriendlyName "Smart Terminal Certificate" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+
+# Export certificate
+$password = ConvertTo-SecureString -String "YourPassword" -Force -AsPlainText
+Export-PfxCertificate -cert "Cert:\CurrentUser\My\<certificate-thumbprint>" -FilePath SmartTerminal.pfx -Password $password
+
+# Sign package
+signtool.exe sign /fd SHA256 /a /f SmartTerminal.pfx /p YourPassword SmartTerminal.msix
+```
+
+## Windows Store Publishing
+
+1. Register in Partner Center:
+   - Go to [Partner Center](https://partner.microsoft.com/dashboard)
+   - Complete account setup
+   - Pay registration fee (if required)
+
+2. Create app submission:
+   - Go to "Apps and Games"
+   - Click "Create a new app"
+   - Reserve app name
+   - Set pricing and availability
+   - Configure Store listing
+   - Set up age ratings
+
+3. Configure product offerings:
+```
+Subscription Tiers:
+- Free: 50 queries/month
+- Basic: 500 queries/month ($4.99/month)
+- Pro: 2000 queries/month ($9.99/month)
+- Enterprise: 10000 queries/month ($49.99/month)
+```
+
+4. Submit for certification:
+   - Upload signed .msix package
+   - Complete store listing
+   - Provide testing notes
+   - Submit for review
+
+5. Post-submission:
+   - Monitor certification status
+   - Address any certification feedback
+   - Prepare for launch
+
+## Architecture
+
+### Terminal Application
+- Rust-based TUI using Ratatui
+- Windows Store licensing integration
+- Azure Function API integration
+- Local storage for preferences and history
+
+### Azure Backend
+- Azure Functions for API handling
+- Key Vault for secret management
+- Table Storage for usage tracking
+- Store authentication validation
+
+### Windows Store Integration
+- License validation
+- Subscription management
+- Usage quota enforcement
+- Automatic updates
+
+## Troubleshooting
+
+### Common Issues
+
+1. Package Signing Errors:
+```bash
+# Check certificate validity
+certutil -verify SmartTerminal.pfx
+
+# Verify package
+signtool.exe verify /pa SmartTerminal.msix
+```
+
+2. Store Submission Errors:
+- Ensure all required capabilities are declared in manifest
+- Verify assets meet size requirements
+- Check that version numbers match across all files
+
+3. Azure Function Issues:
+```bash
+# Check function logs
+func azure functionapp logstream smart-terminal-api
+```
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-- GitHub Issues for bug reports and feature requests
-- Email support for paid tiers
-
-
-## Security
-
-Please report security vulnerabilities to security@ratatocli.dev or via GitHub's security advisories.
-
-## Roadmap
-
-- [ ] Linux support
-- [ ] Custom themes
-- [ ] Plugin system
-- [ ] Team collaboration features
-- [ ] Advanced AI workflows
-- [ ] Cloud synchronization
-
-## FAQ
-
-**Q: How do I upgrade my subscription?**
-A: Use the `/upgrade` command or visit the Windows Store page.
-
-**Q: Can I use my own Claude API key?**
-A: Currently not supported. All API calls are managed through our secure backend.
-
-**Q: Is there an offline mode?**
-A: Not currently, but it's on our roadmap.
-
-**Q: Where do I find my Windows Store Product ID?**
-A: After registering your application in the Microsoft Partner Center, you can find the Product ID in your app's listing details.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. 
+This repo is under a AGPL-3.0 license with a CLA.
