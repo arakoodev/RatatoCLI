@@ -165,11 +165,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - GitHub Issues for bug reports and feature requests
 - Email support for paid tiers
-- Documentation at [docs.smartterminal.dev](https://docs.smartterminal.dev)
+
 
 ## Security
 
-Please report security vulnerabilities to security@smartterminal.dev or via GitHub's security advisories.
+Please report security vulnerabilities to security@ratatocli.dev or via GitHub's security advisories.
 
 ## Roadmap
 
@@ -196,4 +196,4 @@ A: After registering your application in the Microsoft Partner Center, you can f
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For available versions, see the [tags on this repository](https://github.com/yourusername/smart-terminal/tags).
+We use [SemVer](http://semver.org/) for versioning. 
