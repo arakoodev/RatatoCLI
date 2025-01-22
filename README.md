@@ -43,9 +43,11 @@ Prerequisites:
 git clone https://github.com/yourusername/smart-terminal
 cd smart-terminal
 
-# Create .env file with your configuration
-cp .env.example .env
-# Edit .env with your settings
+# Create .env file with required environment variables:
+cat > .env << EOL
+STORE_PRODUCT_ID=your-windows-store-product-id
+API_BASE_URL=https://smart-terminal-api-prod.azurewebsites.net
+EOL
 
 # Build the project
 cargo build --release
@@ -53,6 +55,20 @@ cargo build --release
 # Run the application
 cargo run --release
 ```
+
+## Configuration
+
+The application requires two environment variables:
+
+```env
+# The Windows Store product ID for your application
+STORE_PRODUCT_ID=your-windows-store-product-id
+
+# The Azure Functions backend URL
+API_BASE_URL=https://smart-terminal-api-prod.azurewebsites.net
+```
+
+These can be set either in a `.env` file in the project root or as system environment variables.
 
 ## Usage
 
@@ -114,18 +130,12 @@ smart-terminal/
 └── README.md          # This file
 ```
 
-### Environment Variables
-
-```env
-API_BASE_URL=https://your-azure-function-url
-STORE_PRODUCT_ID=your-windows-store-product-id
-```
-
 ### Building for Windows Store
 
 1. Register as a Microsoft Partner Center developer
 2. Set up your app listing and subscription products
-3. Build the MSIX package:
+3. Get your product ID from the Partner Center
+4. Build the MSIX package:
 ```bash
 cargo build --release
 # Package creation steps in infrastructure/windows/package.ps1
@@ -157,12 +167,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Email support for paid tiers
 - Documentation at [docs.smartterminal.dev](https://docs.smartterminal.dev)
 
-## Acknowledgments
-
-- Anthropic for Claude API
-- Microsoft for Windows Store integration
-- The Rust community for excellent crates
-
 ## Security
 
 Please report security vulnerabilities to security@smartterminal.dev or via GitHub's security advisories.
@@ -186,6 +190,9 @@ A: Currently not supported. All API calls are managed through our secure backend
 
 **Q: Is there an offline mode?**
 A: Not currently, but it's on our roadmap.
+
+**Q: Where do I find my Windows Store Product ID?**
+A: After registering your application in the Microsoft Partner Center, you can find the Product ID in your app's listing details.
 
 ## Versioning
 
